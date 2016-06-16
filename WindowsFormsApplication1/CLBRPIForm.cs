@@ -23,7 +23,6 @@ namespace WindowsFormsApplication1
         public CLBRPIForm()
         {
             InitializeComponent();
-            TeamsGridView.RowPostPaint += dgGrid_RowPostPaint;
 
             TeamsGridView.AutoGenerateColumns = true;
             TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
@@ -35,6 +34,9 @@ namespace WindowsFormsApplication1
             
         }
 
+        /// <summary>
+        /// Runs all calculations for all teams
+        /// </summary>
         public void RunCalculations()
         {
             foreach (var teamModel in teams)
@@ -150,6 +152,9 @@ namespace WindowsFormsApplication1
             }
         }
 
+        /// <summary>
+        /// Gets records versus opponents from HTML and puts them in that team's opponent list
+        /// </summary>
         private void GetOpponents()
         {
             var returnList = new List<OpponentModel>();
@@ -233,21 +238,6 @@ namespace WindowsFormsApplication1
             
         }
 
-        private void dgGrid_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
-        {
-            var grid = sender as DataGridView;
-            var rowIdx = (e.RowIndex + 1).ToString();
-
-            var centerFormat = new StringFormat()
-            {
-                // right alignment might actually make more sense for numbers
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
-            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
-            e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
-        }
 
         private void btnRPI_Click(object sender, EventArgs e)
         {
