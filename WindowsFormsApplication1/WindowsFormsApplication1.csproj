@@ -55,11 +55,11 @@
     <Compile Include="CLBRPIForm.Designer.cs">
       <DependentUpon>CLBRPIForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="OpponentModel.cs" />
+    <Compile Include="Models\OpponentModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SortableBindingList.cs" />
-    <Compile Include="TeamModel.cs" />
+    <Compile Include="CustomClasses\SortableBindingList.cs" />
+    <Compile Include="Models\TeamModel.cs" />
     <EmbeddedResource Include="CLBRPIForm.resx">
       <DependentUpon>CLBRPIForm.cs</DependentUpon>
     </EmbeddedResource>

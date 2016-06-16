@@ -46,8 +46,12 @@ namespace WindowsFormsApplication1
 
             public float RPI { get; set; }
             public float WinningPercentage { get; set; }
+            public float SoS { get; set; }
 
-            public float OpponentsWinPercentage { get; set; }
+        public int SoSRank { get; set; }
+        public int RPIRank { get; set; }
+
+        public float OpponentsWinPercentage { get; set; }
             public float OpponentsOpponentWinPercentage { get; set; }
 
             private void CalcWinPercentage()
@@ -65,6 +69,10 @@ namespace WindowsFormsApplication1
                 
             }
 
+        /// <summary>
+        /// Calculates Opponent's Win Percentage, weighted by number of times played
+        /// </summary>
+        /// <param name="teams"></param>
             public void CalcOppWinPercentage(SortableBindingList<TeamModel> teams )
             {
                 //Opponents win percentage is calculated by:
@@ -108,6 +116,10 @@ namespace WindowsFormsApplication1
 
             }
 
+        /// <summary>
+        /// Calculates average of  Opponent's Opponent's Win Percentage 
+        /// </summary>
+        /// <param name="teams"></param>
         public void CalcOppOppWinPercentage(SortableBindingList<TeamModel> teams)
         {
 	            //Opponent's Opponent's Win percentage is calculated by summing all of the opponents win percentages together, and
@@ -129,11 +141,54 @@ namespace WindowsFormsApplication1
 	            OpponentsOpponentWinPercentage = totalOpponentWinPercentage/OpponentsList.Count;
 	        }
 
+        /// <summary>
+        /// Calculates RIP based on WinPerc, OppWinPer, OppOppWinPer
+        /// </summary>
             public void CalcRPI()
             {
                 RPI = (float) ((WinningPercentage*.25) + (OpponentsWinPercentage*.5) + (OpponentsOpponentWinPercentage*.25));
-                RPI = (float)Math.Round((Decimal) RPI, 3, MidpointRounding.AwayFromZero);
             }
+
+        public void CalcStrengthOfSchedule()
+        {
+            SoS = ((2*OpponentsWinPercentage) + OpponentsOpponentWinPercentage)/3;
+        }
+
+        public void CalcRanks(SortableBindingList<TeamModel> teams)
+        {
+            int rpirank = 1;
+            int sosrank = 1;
+
+            foreach (var teamModel in teams)
+            {
+                if (teamModel.Name != Name)
+                {
+                    if (RPI < teamModel.RPI)
+                    {
+                        rpirank++;
+                    }
+
+                    if (SoS < teamModel.SoS)
+                    {
+                        sosrank++;
+                    }
+                }
+                
+            }
+
+            RPIRank = rpirank;
+            SoSRank = sosrank;
+
+        }
+
+        public void RoundData()
+        {
+            RPI = (float)Math.Round((Decimal)RPI, 3, MidpointRounding.AwayFromZero);
+            SoS = (float)Math.Round((Decimal)SoS, 3, MidpointRounding.AwayFromZero);
+            WinningPercentage = (float)Math.Round((Decimal)WinningPercentage, 3, MidpointRounding.AwayFromZero);
+            OpponentsWinPercentage = (float)Math.Round((Decimal)OpponentsWinPercentage, 3, MidpointRounding.AwayFromZero);
+            OpponentsOpponentWinPercentage = (float)Math.Round((Decimal)OpponentsWinPercentage, 3, MidpointRounding.AwayFromZero);
+        }
 	
         }
 

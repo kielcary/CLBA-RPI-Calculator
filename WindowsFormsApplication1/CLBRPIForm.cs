@@ -23,19 +23,16 @@ namespace WindowsFormsApplication1
         public CLBRPIForm()
         {
             InitializeComponent();
+            TeamsGridView.RowPostPaint += dgGrid_RowPostPaint;
 
             TeamsGridView.AutoGenerateColumns = true;
+            TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
 
             GetStandings();
             GetOpponents();
             RunCalculations();
 
-            TeamsGridView.DataSource = teams;
-
-            foreach (DataGridViewColumn column in TeamsGridView.Columns)
-            {
-                column.SortMode = DataGridViewColumnSortMode.Automatic;
-            }
+            
         }
 
         public void RunCalculations()
@@ -53,7 +50,16 @@ namespace WindowsFormsApplication1
             foreach (var teamModel in teams)
             {
                 teamModel.CalcRPI();
+                teamModel.CalcStrengthOfSchedule();
+                teamModel.RoundData();
             }
+
+            foreach (var teamModel in teams)
+            {
+                teamModel.CalcRanks(teams);
+            }
+
+            
         }
 
         /// <summary>
@@ -187,7 +193,112 @@ namespace WindowsFormsApplication1
             }
         }
 
+        private void btnAll_Click(object sender, EventArgs e)
+        {
 
+
+            TeamsGridView.DataSource = null;
+            TeamsGridView.Columns.Clear();
+            TeamsGridView.Rows.Clear();
+            TeamsGridView.Refresh();
+
+            TeamsGridView.AutoGenerateColumns = false;
+
+            TeamsGridView.Columns.Add("Name", "Team");
+            TeamsGridView.Columns.Add("Wins", "W");
+            TeamsGridView.Columns.Add("Losses", "L");
+            TeamsGridView.Columns.Add("RPIRank", "RPI Rank");
+            TeamsGridView.Columns.Add("SoSRank", "SoS Rank");
+            TeamsGridView.Columns.Add("RPI", "RPI");
+            TeamsGridView.Columns.Add("SoS", "SoS");
+            TeamsGridView.Columns.Add("WP", "WP");
+            TeamsGridView.Columns.Add("OWP", "OWP");
+            TeamsGridView.Columns.Add("OOWP", "OOWP");
+            
+
+            TeamsGridView.Columns[0].DataPropertyName = "Name";
+            TeamsGridView.Columns[1].DataPropertyName = "Wins";
+            TeamsGridView.Columns[2].DataPropertyName = "Losses";
+            TeamsGridView.Columns[3].DataPropertyName = "RPIRank";
+            TeamsGridView.Columns[4].DataPropertyName = "SoSRank";
+            TeamsGridView.Columns[5].DataPropertyName = "RPI";
+            TeamsGridView.Columns[6].DataPropertyName = "SoS";
+            TeamsGridView.Columns[7].DataPropertyName = "WinningPercentage";
+            TeamsGridView.Columns[8].DataPropertyName = "OpponentsWinPercentage";
+            TeamsGridView.Columns[9].DataPropertyName = "OpponentsOpponentWinPercentage";
+
+
+            TeamsGridView.DataSource = teams;
+            TeamsGridView.Sort(TeamsGridView.Columns["Name"], ListSortDirection.Ascending);
+            
+        }
+
+        private void dgGrid_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            var grid = sender as DataGridView;
+            var rowIdx = (e.RowIndex + 1).ToString();
+
+            var centerFormat = new StringFormat()
+            {
+                // right alignment might actually make more sense for numbers
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+
+            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
+            e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
+        }
+
+        private void btnRPI_Click(object sender, EventArgs e)
+        {
+            
+
+            TeamsGridView.DataSource = null;
+            TeamsGridView.Rows.Clear();
+            TeamsGridView.Refresh();
+
+            TeamsGridView.AutoGenerateColumns = false;
+            TeamsGridView.Columns.Clear();
+
+            TeamsGridView.DataSource = teams;
+
+            TeamsGridView.Columns.Add("RPI Rank", "RPI Rank");
+            TeamsGridView.Columns.Add("Name", "Team");
+            TeamsGridView.Columns.Add("RPI", "RPI");
+
+            TeamsGridView.Columns[0].DataPropertyName = "RPIRank";
+            TeamsGridView.Columns[1].DataPropertyName = "Name";
+            TeamsGridView.Columns[2].DataPropertyName = "RPI";
+            
+            TeamsGridView.Sort(TeamsGridView.Columns["RPI"], ListSortDirection.Descending);
+
+            
+        }
+
+        private void btnSoS_Click(object sender, EventArgs e)
+        {
+            TeamsGridView.DataSource = null;
+            TeamsGridView.Rows.Clear();
+            TeamsGridView.Refresh();
+
+            TeamsGridView.AutoGenerateColumns = false;
+
+            TeamsGridView.DataSource = teams;
+
+            TeamsGridView.Columns.Clear();
+
+            TeamsGridView.Columns.Add("SoSRank", "SoSRank");
+            TeamsGridView.Columns.Add("Name", "Team");
+            TeamsGridView.Columns.Add("SoS", "SoS");
+
+            TeamsGridView.Columns[0].DataPropertyName = "SoSRank";
+            TeamsGridView.Columns[1].DataPropertyName = "Name";
+            TeamsGridView.Columns[2].DataPropertyName = "SoS";
+
+
+            TeamsGridView.Sort(TeamsGridView.Columns["SoS"], ListSortDirection.Descending);
+        }
+        
     }
 }
 
