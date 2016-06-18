@@ -50,10 +50,15 @@ namespace WindowsFormsApplication1
 
         public int SoSRank { get; set; }
         public int RPIRank { get; set; }
+        public float PreviousRPI { get; set; }
+        public float RPIDiff { get; set; }
 
         public float OpponentsWinPercentage { get; set; }
         public float OpponentsOpponentWinPercentage { get; set; }
 
+        /// <summary>
+        /// Calculate's team's RPI
+        /// </summary>
         private void CalcWinPercentage()
         {
 
@@ -149,11 +154,16 @@ namespace WindowsFormsApplication1
             RPI = (float)((WinningPercentage * .25) + (OpponentsWinPercentage * .5) + (OpponentsOpponentWinPercentage * .25));
         }
 
+        //Calculates team's Strenght of Schedule
         public void CalcStrengthOfSchedule()
         {
             SoS = ((2 * OpponentsWinPercentage) + OpponentsOpponentWinPercentage) / 3;
         }
 
+        /// <summary>
+        /// Determines and assigns rankings based on Strength of Schedule and RPI
+        /// </summary>
+        /// <param name="teams"></param>
         public void CalcRanks(SortableBindingList<TeamModel> teams)
         {
             int rpirank = 1;
@@ -181,6 +191,9 @@ namespace WindowsFormsApplication1
 
         }
 
+        /// <summary>
+        /// Rounds data to three decimals for better visual display.
+        /// </summary>
         public void RoundData()
         {
             RPI = (float)Math.Round((Decimal)RPI, 3, MidpointRounding.AwayFromZero);

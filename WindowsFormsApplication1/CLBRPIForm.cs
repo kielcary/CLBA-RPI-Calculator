@@ -26,12 +26,14 @@ namespace WindowsFormsApplication1
             GetStandings();
             GetOpponents();
             RunCalculations();
+            HandlePreviousRPI();
 
-            WriteXML();
         }
 
-
-        private void WriteXML()
+        /// <summary>
+        /// Stores some data in an XML file to handle the previous week's RPI.
+        /// </summary>
+        private void HandlePreviousRPI()
         {
             var hasNewData = false;
 
@@ -49,17 +51,22 @@ namespace WindowsFormsApplication1
                     var xmlWins = Convert.ToInt32(xmlTeam.Element("Wins").Value);
                     var xmlLosses = Convert.ToInt32(xmlTeam.Element("Losses").Value);
 
+                    teamModel.PreviousRPI = Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
+                    teamModel.RPIDiff = teamModel.RPI - Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
+
                     //Checks to see if it's new data for this team, sets previous RPI if it is
                     if (xmlWins != teamModel.Wins || xmlLosses != teamModel.Losses)
                     {
                         hasNewData = true;
                         //set previous RPI before overwriting things...
                         xmlTeam.Element("PreviousRPI").Value = xmlTeam.Element("RPI").Value;
+                        teamModel.PreviousRPI = Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
+                        teamModel.RPIDiff = teamModel.RPI - Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
 
                         xmlTeam.Element("RPI").Value = teamModel.RPI.ToString();
                         xmlTeam.Element("Wins").Value = teamModel.Wins.ToString();
                         xmlTeam.Element("Losses").Value = teamModel.Losses.ToString();
-                        ;
+
                     }
                 }
                 else
@@ -263,22 +270,24 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns.Add("RPIRank", "RPI Rank");
             TeamsGridView.Columns.Add("SoSRank", "SoS Rank");
             TeamsGridView.Columns.Add("RPI", "RPI");
+            TeamsGridView.Columns.Add("PrevRPI", "PrevRPI");
             TeamsGridView.Columns.Add("SoS", "SoS");
             TeamsGridView.Columns.Add("WP", "WP");
             TeamsGridView.Columns.Add("OWP", "OWP");
             TeamsGridView.Columns.Add("OOWP", "OOWP");
 
-
+            
             TeamsGridView.Columns[0].DataPropertyName = "Name";
             TeamsGridView.Columns[1].DataPropertyName = "Wins";
             TeamsGridView.Columns[2].DataPropertyName = "Losses";
             TeamsGridView.Columns[3].DataPropertyName = "RPIRank";
             TeamsGridView.Columns[4].DataPropertyName = "SoSRank";
             TeamsGridView.Columns[5].DataPropertyName = "RPI";
-            TeamsGridView.Columns[6].DataPropertyName = "SoS";
-            TeamsGridView.Columns[7].DataPropertyName = "WinningPercentage";
-            TeamsGridView.Columns[8].DataPropertyName = "OpponentsWinPercentage";
-            TeamsGridView.Columns[9].DataPropertyName = "OpponentsOpponentWinPercentage";
+            TeamsGridView.Columns[6].DataPropertyName = "PreviousRPI";
+            TeamsGridView.Columns[7].DataPropertyName = "SoS";
+            TeamsGridView.Columns[8].DataPropertyName = "WinningPercentage";
+            TeamsGridView.Columns[9].DataPropertyName = "OpponentsWinPercentage";
+            TeamsGridView.Columns[10].DataPropertyName = "OpponentsOpponentWinPercentage";
 
 
             TeamsGridView.DataSource = teams;
@@ -300,10 +309,15 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns.Add("RPI Rank", "RPI Rank");
             TeamsGridView.Columns.Add("Name", "Team");
             TeamsGridView.Columns.Add("RPI", "RPI");
+            TeamsGridView.Columns.Add("PreviousRPI", "PrevRPI");
+            TeamsGridView.Columns.Add("DIFF", "RPIDIFF");
 
             TeamsGridView.Columns[0].DataPropertyName = "RPIRank";
             TeamsGridView.Columns[1].DataPropertyName = "Name";
             TeamsGridView.Columns[2].DataPropertyName = "RPI";
+            TeamsGridView.Columns[3].DataPropertyName = "PreviousRPI";
+            TeamsGridView.Columns[4].DataPropertyName = "RPIDiff";
+            
 
             TeamsGridView.Sort(TeamsGridView.Columns["RPI"], ListSortDirection.Descending);
         }
