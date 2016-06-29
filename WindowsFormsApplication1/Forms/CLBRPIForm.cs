@@ -1,98 +1,97 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using WindowsFormsApplication1.DataBaseContext;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace WindowsFormsApplication1
 {
     public partial class CLBRPIForm : Form
     {
-        private static readonly SortableBindingList<TeamModel> teams = new SortableBindingList<TeamModel>();
+        private static readonly SortableBindingList<TeamModel> Teams = new SortableBindingList<TeamModel>();
+        private int SeasonID;
 
 
         public CLBRPIForm()
         {
             InitializeComponent();
 
+            using (var seasonForm = new SeasonCheckForm())
+            {
+                var result = seasonForm.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    SeasonID = seasonForm.SeasonID;
+                }
+            }
+
             TeamsGridView.AutoGenerateColumns = true;
             TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
 
+
+            GetTeams();
             GetStandings();
             GetOpponents();
             RunCalculations();
-            HandlePreviousRPI();
+            CommitNewDataToDataBase();
 
         }
 
-        /// <summary>
-        /// Stores some data in an XML file to handle the previous week's RPI.
-        /// </summary>
-        private void HandlePreviousRPI()
+        private void GetTeams()
         {
-            var hasNewData = false;
-
-            var ratingsXML = XDocument.Load(Program.XMLDocPath + "\\RatingsData.xml");
-
-            var teamsElement = ratingsXML.Element("teams");
-
-            foreach (var teamModel in teams)
+            using (var Content = new DataClassesDataContext())
             {
-                if (teamsElement.Descendants("team").Any(x => x.Element("TeamName").Value == teamModel.Name))
+                var list = Content.Teams;
+
+                foreach (var team in list)
                 {
-                    var xmlTeam = teamsElement.Descendants("team").FirstOrDefault(x =>
-                        x.Element("TeamName").Value == teamModel.Name);
-                    var xmlName = xmlTeam.Element("TeamName").Value;
-                    var xmlWins = Convert.ToInt32(xmlTeam.Element("Wins").Value);
-                    var xmlLosses = Convert.ToInt32(xmlTeam.Element("Losses").Value);
-
-                    teamModel.PreviousRPI = Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
-                    teamModel.RPIDiff = teamModel.RPI - Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
-
-                    //Checks to see if it's new data for this team, sets previous RPI if it is
-                    if (xmlWins != teamModel.Wins || xmlLosses != teamModel.Losses)
+                    Teams.Add(new TeamModel()
                     {
-                        hasNewData = true;
-                        //set previous RPI before overwriting things...
-                        xmlTeam.Element("PreviousRPI").Value = xmlTeam.Element("RPI").Value;
-                        teamModel.PreviousRPI = Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
-                        teamModel.RPIDiff = teamModel.RPI - Convert.ToInt32(xmlTeam.Element("PreviousRPI").Value);
+                        TeamID = team.TeamID,
+                        Name = team.TeamName,
+                        Division = team.League1.LeagueName + " " + team.Division1.DivisionName,
+                        OpponentsList = (from t in Content.Teams
+                                         select new OpponentModel()
+                                         {
+                                             OpponentTeamID = t.TeamID,
+                                             OpponentTeamName = t.TeamName,
+                                         }).ToList()
+                    });
+                }
+            }
+        }
 
-                        xmlTeam.Element("RPI").Value = teamModel.RPI.ToString();
-                        xmlTeam.Element("Wins").Value = teamModel.Wins.ToString();
-                        xmlTeam.Element("Losses").Value = teamModel.Losses.ToString();
+        /// <summary>
+        /// Handles database save.
+        /// </summary>
+        private void CommitNewDataToDataBase()
+        {
+            using (var Content = new DataClassesDataContext())
+            {
+                var hasNewData = false;
 
-                    }
+
+                foreach (var teamModel in Teams)
+                {
+                   
+                }
+
+                if (hasNewData)
+                {
+                    MessageBox.Show("New data retrieved.  'PreviousRPI' has been updated.", "Attention",
+                        MessageBoxButtons.OK);
                 }
                 else
                 {
-                    hasNewData = true;
-
-                    var NewTeamElement = new XElement("team",
-                        new XElement("TeamName", teamModel.Name),
-                        new XElement("RPI", teamModel.RPI),
-                        new XElement("Wins", teamModel.Wins),
-                        new XElement("Losses", teamModel.Losses),
-                        new XElement("PreviousRPI", "0"));
-
-                    teamsElement.Add(NewTeamElement);
+                    MessageBox.Show("No new data was retrieved.", "Attention", MessageBoxButtons.OK);
                 }
-            }
-
-            if (hasNewData)
-            {
-                ratingsXML.Save(Program.XMLDocPath + "\\RatingsData.xml");
-                MessageBox.Show("New data retrieved.  'PreviousRPI' has been updated.", "Attention",
-                    MessageBoxButtons.OK);
-            }
-            else
-            {
-                MessageBox.Show("No new data was retrieved.", "Attention", MessageBoxButtons.OK);
             }
         }
 
@@ -101,26 +100,26 @@ namespace WindowsFormsApplication1
         /// </summary>
         public void RunCalculations()
         {
-            foreach (var teamModel in teams)
+            foreach (var teamModel in Teams)
             {
-                teamModel.CalcOppWinPercentage(teams);
+                teamModel.CalcOppWinPercentage(Teams);
             }
 
-            foreach (var teamModel in teams)
+            foreach (var teamModel in Teams)
             {
-                teamModel.CalcOppOppWinPercentage(teams);
+                teamModel.CalcOppOppWinPercentage(Teams);
             }
 
-            foreach (var teamModel in teams)
+            foreach (var teamModel in Teams)
             {
                 teamModel.CalcRPI();
                 teamModel.CalcStrengthOfSchedule();
                 teamModel.RoundData();
             }
 
-            foreach (var teamModel in teams)
+            foreach (var teamModel in Teams)
             {
-                teamModel.CalcRanks(teams);
+                teamModel.CalcRanks(Teams);
             }
         }
 
@@ -161,7 +160,7 @@ namespace WindowsFormsApplication1
         }
 
         /// <summary>
-        ///     Retrieves teams and team record.
+        ///     Retrieves teams and team record by parsing an HTML page.
         /// </summary>
         private void GetStandings()
         {
@@ -196,14 +195,10 @@ namespace WindowsFormsApplication1
                             Wins = childNode.ChildNodes[3].InnerText;
                             Losses = childNode.ChildNodes[5].InnerText;
 
-                            if (teams.All(x => x.Name != Team) && Wins != "W")
+                            if (Teams.Any(x => x.Name == Team) && Wins != "W")
                             {
-                                teams.Add(new TeamModel
-                                {
-                                    Name = Team,
-                                    Wins = Convert.ToInt32(Wins),
-                                    Losses = Convert.ToInt32(Losses)
-                                });
+                                Teams.FirstOrDefault(x => x.Name == Team).Wins = Convert.ToInt32(Wins);
+                                Teams.FirstOrDefault(x => x.Name == Team).Losses = Convert.ToInt32(Losses);
                             }
                         }
                     }
@@ -230,26 +225,28 @@ namespace WindowsFormsApplication1
                 (x => x.Name == "table" && x.Attributes["class"] != null &&
                       x.Attributes["class"].Value.Contains("data sortable")).ToList();
 
-            foreach (var teamModel in teams)
+            foreach (var teamModel in Teams)
             {
                 //Each team is in its own table, so get the corresponding table from the htmlnodes
                 var currentTeamOpponentsNode =
-                    TeamVsTeamHtmlNodes.Where(x => x.ChildNodes[1].ChildNodes[1].InnerText.Equals(teamModel.Name))
-                        .FirstOrDefault();
+                    TeamVsTeamHtmlNodes
+                        .FirstOrDefault(x => x.ChildNodes[1].ChildNodes[1].InnerText.Equals(teamModel.Name));
 
                 //Cycle through the nodes and create new opponent objects based on team name
                 foreach (var childNode in currentTeamOpponentsNode.ChildNodes)
                 {
                     if (childNode.Name != "#text" && !childNode.InnerHtml.Contains(teamModel.Name))
                     {
+                        var opponentName = childNode.ChildNodes[1].InnerText;
                         var record = childNode.ChildNodes[3].InnerText.Split('-');
 
-                        teamModel.OpponentsList.Add(new OpponentModel
+                        if (teamModel.OpponentsList.Any(x => x.OpponentTeamName == opponentName))
                         {
-                            TeamName = childNode.ChildNodes[1].InnerText,
-                            WinsVersus = Convert.ToInt32(record[0]),
-                            LossesVersus = Convert.ToInt32(record[1])
-                        });
+                            teamModel.OpponentsList.FirstOrDefault(x => x.OpponentTeamName == opponentName).WinsVersus =
+                            Convert.ToInt32(record[0]);
+                            teamModel.OpponentsList.FirstOrDefault(x => x.OpponentTeamName == opponentName).LossesVersus =
+                                Convert.ToInt32(record[1]);
+                        }
                     }
                 }
             }
@@ -281,19 +278,18 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns[1].DataPropertyName = "Wins";
             TeamsGridView.Columns[2].DataPropertyName = "Losses";
             TeamsGridView.Columns[3].DataPropertyName = "RPIRank";
-            TeamsGridView.Columns[4].DataPropertyName = "SoSRank";
+            TeamsGridView.Columns[4].DataPropertyName = "StrengthOfScheduleRank";
             TeamsGridView.Columns[5].DataPropertyName = "RPI";
             TeamsGridView.Columns[6].DataPropertyName = "PreviousRPI";
-            TeamsGridView.Columns[7].DataPropertyName = "SoS";
+            TeamsGridView.Columns[7].DataPropertyName = "StrengthOfSchedule";
             TeamsGridView.Columns[8].DataPropertyName = "WinningPercentage";
             TeamsGridView.Columns[9].DataPropertyName = "OpponentsWinPercentage";
             TeamsGridView.Columns[10].DataPropertyName = "OpponentsOpponentWinPercentage";
 
 
-            TeamsGridView.DataSource = teams;
+            TeamsGridView.DataSource = Teams;
             TeamsGridView.Sort(TeamsGridView.Columns["Name"], ListSortDirection.Ascending);
         }
-
 
         private void btnRPI_Click(object sender, EventArgs e)
         {
@@ -304,7 +300,7 @@ namespace WindowsFormsApplication1
             TeamsGridView.AutoGenerateColumns = false;
             TeamsGridView.Columns.Clear();
 
-            TeamsGridView.DataSource = teams;
+            TeamsGridView.DataSource = Teams;
 
             TeamsGridView.Columns.Add("RPI Rank", "RPI Rank");
             TeamsGridView.Columns.Add("Name", "Team");
@@ -330,7 +326,7 @@ namespace WindowsFormsApplication1
 
             TeamsGridView.AutoGenerateColumns = false;
 
-            TeamsGridView.DataSource = teams;
+            TeamsGridView.DataSource = Teams;
 
             TeamsGridView.Columns.Clear();
 
@@ -338,9 +334,9 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns.Add("Name", "Team");
             TeamsGridView.Columns.Add("SoS", "SoS");
 
-            TeamsGridView.Columns[0].DataPropertyName = "SoSRank";
+            TeamsGridView.Columns[0].DataPropertyName = "StrengthOfScheduleRank";
             TeamsGridView.Columns[1].DataPropertyName = "Name";
-            TeamsGridView.Columns[2].DataPropertyName = "SoS";
+            TeamsGridView.Columns[2].DataPropertyName = "StrengthOfSchedule";
 
 
             TeamsGridView.Sort(TeamsGridView.Columns["SoS"], ListSortDirection.Descending);

@@ -9,7 +9,8 @@ namespace WindowsFormsApplication1
     public class OpponentModel
     {
 
-        public String TeamName { get; set; }
+        public string OpponentTeamName { get; set; }
+        public int OpponentTeamID { get; set; }
 
         public int Wins { get; set; }
         public int Losses { get; set; }

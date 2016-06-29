@@ -55,7 +55,7 @@
     <ManifestKeyFile>WindowsFormsApplication1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -64,7 +64,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
@@ -73,6 +73,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -83,20 +84,48 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CLBRPIForm.cs">
+    <Compile Include="Forms\CheckAndCommitForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CLBRPIForm.Designer.cs">
+    <Compile Include="Forms\CheckAndCommitForm.Designer.cs">
+      <DependentUpon>CheckAndCommitForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBaseContext\CLBCalcsDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CLBCalcsDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CLBRPIForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CLBRPIForm.Designer.cs">
       <DependentUpon>CLBRPIForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBaseContext\DataClasses.designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataClasses.dbml</DependentUpon>
     </Compile>
     <Compile Include="Models\OpponentModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CustomClasses\SortableBindingList.cs" />
     <Compile Include="Models\TeamModel.cs" />
-    <EmbeddedResource Include="CLBRPIForm.resx">
+    <Compile Include="Forms\SeasonCheckForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SeasonCheckForm.Designer.cs">
+      <DependentUpon>SeasonCheckForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Forms\CLBRPIForm.resx">
       <DependentUpon>CLBRPIForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\SeasonCheckForm.resx">
+      <DependentUpon>SeasonCheckForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="DataBaseContext\DataClasses.dbml.layout">
+      <DependentUpon>DataClasses.dbml</DependentUpon>
+    </None>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -107,6 +136,22 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="DataBaseContext\CLBCalcsDataSet.xsc">
+      <DependentUpon>CLBCalcsDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="DataBaseContext\CLBCalcsDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>CLBCalcsDataSet.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="DataBaseContext\CLBCalcsDataSet.xss">
+      <DependentUpon>CLBCalcsDataSet.xsd</DependentUpon>
+    </None>
+    <None Include="DataBaseContext\DataClasses.dbml">
+      <Generator>MSLinqToSQLGenerator</Generator>
+      <LastGenOutput>DataClasses.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
@@ -134,6 +179,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

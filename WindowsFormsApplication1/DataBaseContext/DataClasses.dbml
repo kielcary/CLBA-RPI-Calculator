@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="CLBCalcs" Class="DataClassesDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=KIEL-HP\KIELLOCAL;Initial Catalog=CLBCalcs;Integrated Security=True" SettingsObjectName="WindowsFormsApplication1.Properties.Settings" SettingsPropertyName="CLBCalcsConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.Division" Member="Divisions">
+    <Type Name="Division">
+      <Column Name="DivisionID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="DivisionName" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
+      <Association Name="Division_Team" Member="Teams" ThisKey="DivisionID" OtherKey="Division" Type="Team" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Upload" Member="Uploads">
+    <Type Name="Upload">
+      <Column Name="UploadID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UploadDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="GameDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Association Name="Upload_TeamCalculation" Member="TeamCalculations" ThisKey="UploadID" OtherKey="UploadID" Type="TeamCalculation" />
+    </Type>
+  </Table>
+  <Table Name="dbo.League" Member="Leagues">
+    <Type Name="League">
+      <Column Name="LeagueID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LeagueName" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
+      <Association Name="League_Team" Member="Teams" ThisKey="LeagueID" OtherKey="League" Type="Team" />
+    </Type>
+  </Table>
+  <Table Name="dbo.OpponentsRecord" Member="OpponentsRecords">
+    <Type Name="OpponentsRecord">
+      <Column Name="OpponentsRecordID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TeamID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="OpponentTeamID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="WinsAgainst" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="LossesAgainst" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Season_OpponentsRecord" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
+      <Association Name="Team_OpponentsRecord" Member="Team" ThisKey="OpponentTeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
+      <Association Name="Team_OpponentsRecord1" Member="Team1" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Record" Member="Records">
+    <Type Name="Record">
+      <Column Name="RecordID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="TeamID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Wins" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Losses" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="DateModified" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Association Name="Season_Record" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
+      <Association Name="Team_Record" Member="Team" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Season" Member="Seasons">
+    <Type Name="Season">
+      <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Year" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Season_OpponentsRecord" Member="OpponentsRecords" ThisKey="SeasonID" OtherKey="SeasonID" Type="OpponentsRecord" />
+      <Association Name="Season_Record" Member="Records" ThisKey="SeasonID" OtherKey="SeasonID" Type="Record" />
+      <Association Name="Season_TeamCalculation" Member="TeamCalculations" ThisKey="SeasonID" OtherKey="SeasonID" Type="TeamCalculation" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Team" Member="Teams">
+    <Type Name="Team">
+      <Column Name="TeamID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="TeamName" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="League" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Division" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Team_OpponentsRecord" Member="OpponentsRecords" ThisKey="TeamID" OtherKey="OpponentTeamID" Type="OpponentsRecord" />
+      <Association Name="Team_OpponentsRecord1" Member="OpponentsRecords1" ThisKey="TeamID" OtherKey="TeamID" Type="OpponentsRecord" />
+      <Association Name="Team_Record" Member="Records" ThisKey="TeamID" OtherKey="TeamID" Type="Record" />
+      <Association Name="Team_TeamCalculation" Member="TeamCalculations" ThisKey="TeamID" OtherKey="TeamID" Type="TeamCalculation" />
+      <Association Name="Division_Team" Member="Division1" ThisKey="Division" OtherKey="DivisionID" Type="Division" IsForeignKey="true" />
+      <Association Name="League_Team" Member="League1" ThisKey="League" OtherKey="LeagueID" Type="League" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.TeamCalculation" Member="TeamCalculations">
+    <Type Name="TeamCalculation">
+      <Column Name="TeamCalculationID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UploadID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TeamID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="WP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="OWP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="OOWP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="SoS" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="RPI" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="DateCreated" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Association Name="Season_TeamCalculation" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
+      <Association Name="Team_TeamCalculation" Member="Team" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
+      <Association Name="Upload_TeamCalculation" Member="Upload" ThisKey="UploadID" OtherKey="UploadID" Type="Upload" IsForeignKey="true" />
+    </Type>
+  </Table>
+</Database>

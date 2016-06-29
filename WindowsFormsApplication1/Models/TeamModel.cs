@@ -8,17 +8,52 @@ namespace WindowsFormsApplication1
 {
     public class TeamModel
     {
+        #region private
+        private int _TeamID;
         private string _Name;
+        private string _Division;
+
+
         private int _Wins;
         private int _Losses;
+        private float _RPI;
+        private float _WinningPercentage;
+        private float _StrengthOfSchedule;
 
+        private int _StrengthOfScheduleRank;
+        private int _RPIRank;
+        private float _PreviousRPI;
+        private float _RPIDiff;
+
+        private float _OpponentsWinPercentage;
+        private float _OpponentsOpponentWinPercentage;
+
+        
+        
+
+        #endregion private
+
+
+        #region public
         public List<OpponentModel> OpponentsList = new List<OpponentModel>();
 
+        public int TeamID
+        {
+            get { return _TeamID; }
+            set { _TeamID = value; }
+        }
         public string Name
         {
             get { return _Name; }
             set { _Name = value; }
         }
+
+        public string Division
+        {
+            get { return _Division; }
+            set { _Division = value; }
+        }
+
         public int Wins
         {
             get { return _Wins; }
@@ -44,20 +79,58 @@ namespace WindowsFormsApplication1
             }
         }
 
-        public float RPI { get; set; }
-        public float WinningPercentage { get; set; }
-        public float SoS { get; set; }
+        public float RPI
+        {
+            get { return _RPI; }
+            set { _RPI = value; }
+        }
+        public float WinningPercentage
+        {
+            get { return _WinningPercentage; }
+            set { _WinningPercentage = value; }
+        }
+        public float StrengthOfSchedule
+        {
+            get { return _StrengthOfSchedule; }
+            set { _StrengthOfSchedule = value; }
+        }
 
-        public int SoSRank { get; set; }
-        public int RPIRank { get; set; }
-        public float PreviousRPI { get; set; }
-        public float RPIDiff { get; set; }
+        public int StrengthOfScheduleRank
+        {
+            get { return _StrengthOfScheduleRank; }
+            set { _StrengthOfScheduleRank = value; }
+        }
+        public int RPIRank
+        {
+            get { return _RPIRank; }
+            set { _RPIRank = value; }
+        }
+        public float PreviousRPI
+        {
+            get { return _PreviousRPI; }
+            set { _PreviousRPI = value; }
+        }
+        public float RPIDiff
+        {
+            get { return _RPIDiff; }
+            set { _RPIDiff = value; }
+        }
 
-        public float OpponentsWinPercentage { get; set; }
-        public float OpponentsOpponentWinPercentage { get; set; }
+        public float OpponentsWinPercentage
+        {
+            get { return _OpponentsWinPercentage; }
+            set { _OpponentsWinPercentage = value; }
+        }
+        public float OpponentsOpponentWinPercentage
+        {
+            get { return _OpponentsOpponentWinPercentage; }
+            set { _OpponentsOpponentWinPercentage = value; }
+        }
+        #endregion
+
 
         /// <summary>
-        /// Calculate's team's RPI
+        /// Calculate's team's Win Percentage
         /// </summary>
         private void CalcWinPercentage()
         {
@@ -94,8 +167,8 @@ namespace WindowsFormsApplication1
             foreach (var opponentModel in OpponentsList)
             {
                 //Get current wins and losses from the team standings list
-                opponentModel.Wins = (teams.Where(x => x.Name.Equals(opponentModel.TeamName)).FirstOrDefault().Wins);
-                opponentModel.Losses = (teams.Where(x => x.Name.Equals(opponentModel.TeamName)).FirstOrDefault().Losses);
+                opponentModel.Wins = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Wins);
+                opponentModel.Losses = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Losses);
 
                 //Subtract current team's losses versus opponent from that opponent's wins
                 opponentModel.AdjustedWins = opponentModel.Wins - opponentModel.LossesVersus;
@@ -134,14 +207,17 @@ namespace WindowsFormsApplication1
 
             foreach (var opponentModel in OpponentsList)
             {
-                //Get the opponent's OpponentsWinPercentage
-                float currentOppWinPercentage =
-                    teams.FirstOrDefault(x => x.Name.Equals(opponentModel.TeamName)).OpponentsWinPercentage;
+                if (opponentModel.OpponentTeamID != TeamID)
+                {
+                    //Get the opponent's OpponentsWinPercentage
+                    float currentOppWinPercentage =
+                        teams.FirstOrDefault(x => x.Name.Equals(opponentModel.OpponentTeamName)).OpponentsWinPercentage;
 
-                //Add it to the total
-                totalOpponentWinPercentage += currentOppWinPercentage;
+                    //Add it to the total
+                    totalOpponentWinPercentage += currentOppWinPercentage;
+                }
+               
             }
-
             //Divide the total by the number of opponents
             OpponentsOpponentWinPercentage = totalOpponentWinPercentage / OpponentsList.Count;
         }
@@ -157,7 +233,7 @@ namespace WindowsFormsApplication1
         //Calculates team's Strenght of Schedule
         public void CalcStrengthOfSchedule()
         {
-            SoS = ((2 * OpponentsWinPercentage) + OpponentsOpponentWinPercentage) / 3;
+            StrengthOfSchedule = ((2 * OpponentsWinPercentage) + OpponentsOpponentWinPercentage) / 3;
         }
 
         /// <summary>
@@ -171,14 +247,14 @@ namespace WindowsFormsApplication1
 
             foreach (var teamModel in teams)
             {
-                if (teamModel.Name != Name)
+                if (teamModel.TeamID != TeamID)
                 {
                     if (RPI < teamModel.RPI)
                     {
                         rpirank++;
                     }
 
-                    if (SoS < teamModel.SoS)
+                    if (StrengthOfSchedule < teamModel.StrengthOfSchedule)
                     {
                         sosrank++;
                     }
@@ -187,7 +263,7 @@ namespace WindowsFormsApplication1
             }
 
             RPIRank = rpirank;
-            SoSRank = sosrank;
+            StrengthOfScheduleRank = sosrank;
 
         }
 
@@ -197,7 +273,7 @@ namespace WindowsFormsApplication1
         public void RoundData()
         {
             RPI = (float)Math.Round((Decimal)RPI, 3, MidpointRounding.AwayFromZero);
-            SoS = (float)Math.Round((Decimal)SoS, 3, MidpointRounding.AwayFromZero);
+            StrengthOfSchedule = (float)Math.Round((Decimal)StrengthOfSchedule, 3, MidpointRounding.AwayFromZero);
             WinningPercentage = (float)Math.Round((Decimal)WinningPercentage, 3, MidpointRounding.AwayFromZero);
             OpponentsWinPercentage = (float)Math.Round((Decimal)OpponentsWinPercentage, 3, MidpointRounding.AwayFromZero);
             OpponentsOpponentWinPercentage = (float)Math.Round((Decimal)OpponentsOpponentWinPercentage, 3, MidpointRounding.AwayFromZero);

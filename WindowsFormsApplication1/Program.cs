@@ -21,27 +21,11 @@ namespace WindowsFormsApplication1
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            CheckForDataFolder();
+            
 
             Application.Run(new CLBRPIForm());
+            
 
-            CheckForDataFolder();
-
-        }
-
-        private static void CheckForDataFolder()
-        {
-
-
-            if (!Directory.Exists(XMLDocPath))
-            {
-                System.IO.Directory.CreateDirectory(XMLDocPath);
-
-                XDocument doc = new XDocument(new XElement("teams"));
-                doc.Save(XMLDocPath + "\\RatingsData.xml");
-
-            }
         }
     }
 }
