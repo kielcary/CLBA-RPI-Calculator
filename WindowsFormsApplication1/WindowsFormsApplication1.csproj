@@ -117,6 +117,9 @@
     <Compile Include="Forms\SeasonCheckForm.Designer.cs">
       <DependentUpon>SeasonCheckForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Forms\CheckAndCommitForm.resx">
+      <DependentUpon>CheckAndCommitForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\CLBRPIForm.resx">
       <DependentUpon>CLBRPIForm.cs</DependentUpon>
     </EmbeddedResource>

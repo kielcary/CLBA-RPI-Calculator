@@ -25,6 +25,7 @@ namespace WindowsFormsApplication1
 
             using (var seasonForm = new SeasonCheckForm())
             {
+                seasonForm.StartPosition = FormStartPosition.CenterScreen;
                 var result = seasonForm.ShowDialog();
                 if (result == DialogResult.OK)
                 {
@@ -32,15 +33,18 @@ namespace WindowsFormsApplication1
                 }
             }
 
+            using (var newDataForm = new CheckAndCommitForm())
+            {
+                newDataForm.StartPosition = FormStartPosition.CenterScreen;
+                var result = newDataForm.ShowDialog();
+            }
+
             TeamsGridView.AutoGenerateColumns = true;
             TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
 
 
             GetTeams();
-            GetStandings();
-            GetOpponents();
-            RunCalculations();
-            CommitNewDataToDataBase();
+            
 
         }
 
@@ -64,190 +68,6 @@ namespace WindowsFormsApplication1
                                              OpponentTeamName = t.TeamName,
                                          }).ToList()
                     });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Handles database save.
-        /// </summary>
-        private void CommitNewDataToDataBase()
-        {
-            using (var Content = new DataClassesDataContext())
-            {
-                var hasNewData = false;
-
-
-                foreach (var teamModel in Teams)
-                {
-                   
-                }
-
-                if (hasNewData)
-                {
-                    MessageBox.Show("New data retrieved.  'PreviousRPI' has been updated.", "Attention",
-                        MessageBoxButtons.OK);
-                }
-                else
-                {
-                    MessageBox.Show("No new data was retrieved.", "Attention", MessageBoxButtons.OK);
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Runs all calculations for all teams
-        /// </summary>
-        public void RunCalculations()
-        {
-            foreach (var teamModel in Teams)
-            {
-                teamModel.CalcOppWinPercentage(Teams);
-            }
-
-            foreach (var teamModel in Teams)
-            {
-                teamModel.CalcOppOppWinPercentage(Teams);
-            }
-
-            foreach (var teamModel in Teams)
-            {
-                teamModel.CalcRPI();
-                teamModel.CalcStrengthOfSchedule();
-                teamModel.RoundData();
-            }
-
-            foreach (var teamModel in Teams)
-            {
-                teamModel.CalcRanks(Teams);
-            }
-        }
-
-        /// <summary>
-        ///     Retrieves the HTML of a given page.
-        /// </summary>
-        /// <param name="url">URL of page to retrieve HTML from.</param>
-        /// <returns>String containing HTML </returns>
-        private string GetHTML(string url)
-        {
-            var urlAddress = url;
-
-            var request = (HttpWebRequest) WebRequest.Create(urlAddress);
-            var response = (HttpWebResponse) request.GetResponse();
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var receiveStream = response.GetResponseStream();
-                StreamReader readStream = null;
-
-                if (response.CharacterSet == null)
-                {
-                    readStream = new StreamReader(receiveStream);
-                }
-                else
-                {
-                    readStream = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
-                }
-
-                var html = readStream.ReadToEnd();
-
-                response.Close();
-                readStream.Close();
-
-                return html;
-            }
-            return "";
-        }
-
-        /// <summary>
-        ///     Retrieves teams and team record by parsing an HTML page.
-        /// </summary>
-        private void GetStandings()
-        {
-            //Get the file text
-            var source = GetHTML("http://www.thebestdamnleague.com/game/lgreports/leagues/league_100_standings.html");
-
-            //Decode the html
-            source = WebUtility.HtmlDecode(source);
-
-            //Load the decoded string
-            var resultat = new HtmlDocument();
-            resultat.LoadHtml(source);
-
-            //Retrieve the team W/L information
-            var standingsHtmlNodes = resultat.DocumentNode.Descendants().Where
-                (x => x.Name == "table" && x.Attributes["class"] != null &&
-                      x.Attributes["class"].Value.Contains("sortable")).ToList();
-
-            var Team = "";
-            var Wins = "";
-            var Losses = "";
-
-            foreach (var htmlNode in standingsHtmlNodes)
-            {
-                if (htmlNode.ChildNodes.Count == 13)
-                {
-                    foreach (var childNode in htmlNode.ChildNodes)
-                    {
-                        if (childNode.Name != "#text" && childNode != htmlNode.ChildNodes[1])
-                        {
-                            Team = childNode.ChildNodes[1].InnerText;
-                            Wins = childNode.ChildNodes[3].InnerText;
-                            Losses = childNode.ChildNodes[5].InnerText;
-
-                            if (Teams.Any(x => x.Name == Team) && Wins != "W")
-                            {
-                                Teams.FirstOrDefault(x => x.Name == Team).Wins = Convert.ToInt32(Wins);
-                                Teams.FirstOrDefault(x => x.Name == Team).Losses = Convert.ToInt32(Losses);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Gets records versus opponents from HTML and puts them in that team's opponent list
-        /// </summary>
-        private void GetOpponents()
-        {
-            var returnList = new List<OpponentModel>();
-
-            var TeamVsTeamHTML =
-                GetHTML("http://www.thebestdamnleague.com/game/lgreports/leagues/league_100_team_vs_team.html");
-
-            TeamVsTeamHTML = WebUtility.HtmlDecode(TeamVsTeamHTML);
-
-            var resultat = new HtmlDocument();
-            resultat.LoadHtml(TeamVsTeamHTML);
-
-            var TeamVsTeamHtmlNodes = resultat.DocumentNode.Descendants().Where
-                (x => x.Name == "table" && x.Attributes["class"] != null &&
-                      x.Attributes["class"].Value.Contains("data sortable")).ToList();
-
-            foreach (var teamModel in Teams)
-            {
-                //Each team is in its own table, so get the corresponding table from the htmlnodes
-                var currentTeamOpponentsNode =
-                    TeamVsTeamHtmlNodes
-                        .FirstOrDefault(x => x.ChildNodes[1].ChildNodes[1].InnerText.Equals(teamModel.Name));
-
-                //Cycle through the nodes and create new opponent objects based on team name
-                foreach (var childNode in currentTeamOpponentsNode.ChildNodes)
-                {
-                    if (childNode.Name != "#text" && !childNode.InnerHtml.Contains(teamModel.Name))
-                    {
-                        var opponentName = childNode.ChildNodes[1].InnerText;
-                        var record = childNode.ChildNodes[3].InnerText.Split('-');
-
-                        if (teamModel.OpponentsList.Any(x => x.OpponentTeamName == opponentName))
-                        {
-                            teamModel.OpponentsList.FirstOrDefault(x => x.OpponentTeamName == opponentName).WinsVersus =
-                            Convert.ToInt32(record[0]);
-                            teamModel.OpponentsList.FirstOrDefault(x => x.OpponentTeamName == opponentName).LossesVersus =
-                                Convert.ToInt32(record[1]);
-                        }
-                    }
                 }
             }
         }

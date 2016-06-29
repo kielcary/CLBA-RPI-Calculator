@@ -152,6 +152,7 @@
             this.Controls.Add(this.TeamsGridView);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "CLBRPIForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "CLB Rankings Calculator";
             ((System.ComponentModel.ISupportInitialize)(this.TeamsGridView)).EndInit();
             this.groupBox1.ResumeLayout(false);
