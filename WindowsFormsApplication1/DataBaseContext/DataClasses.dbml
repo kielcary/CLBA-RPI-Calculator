@@ -12,7 +12,9 @@
       <Column Name="UploadID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="UploadDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
       <Column Name="GameDate" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="Upload_TeamCalculation" Member="TeamCalculations" ThisKey="UploadID" OtherKey="UploadID" Type="TeamCalculation" />
+      <Association Name="Season_Upload" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
     </Type>
   </Table>
   <Table Name="dbo.League" Member="Leagues">
@@ -30,6 +32,7 @@
       <Column Name="OpponentTeamID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="WinsAgainst" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="LossesAgainst" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="DateModified" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
       <Association Name="Season_OpponentsRecord" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
       <Association Name="Team_OpponentsRecord" Member="Team" ThisKey="OpponentTeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
       <Association Name="Team_OpponentsRecord1" Member="Team1" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
@@ -51,6 +54,7 @@
     <Type Name="Season">
       <Column Name="SeasonID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Year" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Season_Upload" Member="Uploads" ThisKey="SeasonID" OtherKey="SeasonID" Type="Upload" />
       <Association Name="Season_OpponentsRecord" Member="OpponentsRecords" ThisKey="SeasonID" OtherKey="SeasonID" Type="OpponentsRecord" />
       <Association Name="Season_Record" Member="Records" ThisKey="SeasonID" OtherKey="SeasonID" Type="Record" />
       <Association Name="Season_TeamCalculation" Member="TeamCalculations" ThisKey="SeasonID" OtherKey="SeasonID" Type="TeamCalculation" />

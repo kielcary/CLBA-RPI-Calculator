@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace WindowsFormsApplication1
 {
@@ -27,10 +28,6 @@ namespace WindowsFormsApplication1
 
         private float _OpponentsWinPercentage;
         private float _OpponentsOpponentWinPercentage;
-
-        
-        
-
         #endregion private
 
 
@@ -166,27 +163,30 @@ namespace WindowsFormsApplication1
             //1.  Adjust records of opponents by subtracting wins and losses vs the current team from opposing records
             foreach (var opponentModel in OpponentsList)
             {
-                //Get current wins and losses from the team standings list
-                opponentModel.Wins = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Wins);
-                opponentModel.Losses = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Losses);
+                //Make sure they've actually played the opponent...
+                if (opponentModel.WinsVersus != 0 || opponentModel.LossesVersus != 0)
+                {
+                    //Get current wins and losses from the team standings list
+                    opponentModel.Wins = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Wins);
+                    opponentModel.Losses = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().Losses);
 
-                //Subtract current team's losses versus opponent from that opponent's wins
-                opponentModel.AdjustedWins = opponentModel.Wins - opponentModel.LossesVersus;
+                    //Subtract current team's losses versus opponent from that opponent's wins
+                    opponentModel.AdjustedWins = opponentModel.Wins - opponentModel.LossesVersus;
 
-                //Subtract current team's wins versus opponent from that opponent's losses
-                opponentModel.AdjustedLosses = opponentModel.Losses - opponentModel.WinsVersus;
+                    //Subtract current team's wins versus opponent from that opponent's losses
+                    opponentModel.AdjustedLosses = opponentModel.Losses - opponentModel.WinsVersus;
 
-                //To further complicate things, we must now take into account the number of times a team was played, and 
-                //multiply their win/loss record according the times they played them.
-                int timesPlayed = opponentModel.LossesVersus + opponentModel.WinsVersus;
+                    //To further complicate things, we must now take into account the number of times a team was played, and 
+                    //multiply their win/loss record according the times they played them.
+                    int timesPlayed = opponentModel.LossesVersus + opponentModel.WinsVersus;
 
-                opponentModel.AdjustedWins = opponentModel.AdjustedWins * timesPlayed;
-                opponentModel.AdjustedLosses = opponentModel.AdjustedLosses * timesPlayed;
+                    opponentModel.AdjustedWins = opponentModel.AdjustedWins * timesPlayed;
+                    opponentModel.AdjustedLosses = opponentModel.AdjustedLosses * timesPlayed;
 
-                //Add adjusted wins and losses together to get totals
-                totalAdjustedOppWins += opponentModel.AdjustedWins;
-                totalAdjustedOppLosses += opponentModel.AdjustedLosses;
-
+                    //Add adjusted wins and losses together to get totals
+                    totalAdjustedOppWins += opponentModel.AdjustedWins;
+                    totalAdjustedOppLosses += opponentModel.AdjustedLosses;
+                }
             }
 
             OpponentsWinPercentage = totalAdjustedOppWins / (totalAdjustedOppWins + totalAdjustedOppLosses);
@@ -209,17 +209,19 @@ namespace WindowsFormsApplication1
             {
                 if (opponentModel.OpponentTeamID != TeamID)
                 {
-                    //Get the opponent's OpponentsWinPercentage
-                    float currentOppWinPercentage =
-                        teams.FirstOrDefault(x => x.Name.Equals(opponentModel.OpponentTeamName)).OpponentsWinPercentage;
+                    if (opponentModel.WinsVersus != 0 || opponentModel.LossesVersus != 0)
+                    {
+                        //Get the opponent's OpponentsWinPercentage
+                        float currentOppWinPercentage =
+                            teams.FirstOrDefault(x => x.Name.Equals(opponentModel.OpponentTeamName)).OpponentsWinPercentage;
 
-                    //Add it to the total
-                    totalOpponentWinPercentage += currentOppWinPercentage;
+                        //Add it to the total
+                        totalOpponentWinPercentage += currentOppWinPercentage;
+                    }   
                 }
-               
             }
-            //Divide the total by the number of opponents
-            OpponentsOpponentWinPercentage = totalOpponentWinPercentage / OpponentsList.Count;
+            //Divide the total by the number of opponents against whom the team has wins or losses
+            OpponentsOpponentWinPercentage = totalOpponentWinPercentage / OpponentsList.Count(x=> x.WinsVersus != 0 || x.LossesVersus != 0);
         }
 
         /// <summary>

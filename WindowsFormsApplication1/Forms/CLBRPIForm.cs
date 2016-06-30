@@ -16,8 +16,7 @@ namespace WindowsFormsApplication1
     public partial class CLBRPIForm : Form
     {
         private static readonly SortableBindingList<TeamModel> Teams = new SortableBindingList<TeamModel>();
-        private int SeasonID;
-
+        private int _SeasonID;
 
         public CLBRPIForm()
         {
@@ -29,29 +28,35 @@ namespace WindowsFormsApplication1
                 var result = seasonForm.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    SeasonID = seasonForm.SeasonID;
+                    _SeasonID = seasonForm.SeasonID;
                 }
             }
 
-            using (var newDataForm = new CheckAndCommitForm())
+            using (var newDataForm = new CheckAndCommitForm(_SeasonID))
             {
                 newDataForm.StartPosition = FormStartPosition.CenterScreen;
-                var result = newDataForm.ShowDialog();
+                newDataForm.ShowDialog();
             }
 
             TeamsGridView.AutoGenerateColumns = true;
             TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
 
 
-            GetTeams();
-            
+            GetData();
+
 
         }
 
-        private void GetTeams()
+        private void GetData()
         {
             using (var Content = new DataClassesDataContext())
             {
+                if (!Content.Uploads.Any())
+                {
+                    MessageBox.Show("There are no uploads, so there is no data.", "Upload Something!",
+                        MessageBoxButtons.OK);
+                    return;
+                }
                 var list = Content.Teams;
 
                 foreach (var team in list)
@@ -61,13 +66,56 @@ namespace WindowsFormsApplication1
                         TeamID = team.TeamID,
                         Name = team.TeamName,
                         Division = team.League1.LeagueName + " " + team.Division1.DivisionName,
-                        OpponentsList = (from t in Content.Teams
+                        OpponentsList = (from t in Content.OpponentsRecords
+                                         where t.TeamID.Equals(team.TeamID)
+                                         && t.SeasonID.Equals(_SeasonID)
                                          select new OpponentModel()
                                          {
-                                             OpponentTeamID = t.TeamID,
-                                             OpponentTeamName = t.TeamName,
-                                         }).ToList()
+                                             OpponentTeamName = t.Team.TeamName,
+                                             OpponentTeamID = t.OpponentTeamID,
+                                             WinsVersus = t.WinsAgainst,
+                                             LossesVersus = t.LossesAgainst,
+                                         }).ToList(),
+                        Wins = team.Records.FirstOrDefault(x => x.SeasonID == _SeasonID).Wins,
+                        Losses = team.Records.FirstOrDefault(x => x.SeasonID == _SeasonID).Losses,
+                        RPI = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).RPI,
+                        StrengthOfSchedule = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).SoS,
+                        OpponentsWinPercentage = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).OWP,
+                        OpponentsOpponentWinPercentage =
+                            (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).OOWP,
+
+
                     });
+                }
+
+                foreach (var teamModel in Teams)
+                {
+                    var currentUpload = Content.Uploads.OrderByDescending(
+                        x => x.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID);
+
+                    if (currentUpload != null)
+                    {
+                        var previousUpload =
+                            Content.Uploads.FirstOrDefault(x => x.UploadID == (currentUpload.UploadID - 1));
+
+                        if (previousUpload != null)
+                        {
+                            teamModel.PreviousRPI = (float)Content.TeamCalculations.FirstOrDefault(
+                                x => x.UploadID == previousUpload.UploadID).RPI;
+
+                            teamModel.RPIDiff = teamModel.RPI = teamModel.PreviousRPI;
+                        }   
+                    }
+                }
+
+                foreach (var teamModel in Teams)
+                {
+                    teamModel.RoundData();
+                }
+
+                foreach (var teamModel in Teams)
+                {
+                    teamModel.CalcRanks(Teams);
                 }
             }
         }
@@ -82,6 +130,7 @@ namespace WindowsFormsApplication1
             TeamsGridView.AutoGenerateColumns = false;
 
             TeamsGridView.Columns.Add("Name", "Team");
+            TeamsGridView.Columns.Add("Division", "Division");
             TeamsGridView.Columns.Add("Wins", "W");
             TeamsGridView.Columns.Add("Losses", "L");
             TeamsGridView.Columns.Add("RPIRank", "RPI Rank");
@@ -93,18 +142,19 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns.Add("OWP", "OWP");
             TeamsGridView.Columns.Add("OOWP", "OOWP");
 
-            
+
             TeamsGridView.Columns[0].DataPropertyName = "Name";
-            TeamsGridView.Columns[1].DataPropertyName = "Wins";
-            TeamsGridView.Columns[2].DataPropertyName = "Losses";
-            TeamsGridView.Columns[3].DataPropertyName = "RPIRank";
-            TeamsGridView.Columns[4].DataPropertyName = "StrengthOfScheduleRank";
-            TeamsGridView.Columns[5].DataPropertyName = "RPI";
-            TeamsGridView.Columns[6].DataPropertyName = "PreviousRPI";
-            TeamsGridView.Columns[7].DataPropertyName = "StrengthOfSchedule";
-            TeamsGridView.Columns[8].DataPropertyName = "WinningPercentage";
-            TeamsGridView.Columns[9].DataPropertyName = "OpponentsWinPercentage";
-            TeamsGridView.Columns[10].DataPropertyName = "OpponentsOpponentWinPercentage";
+            TeamsGridView.Columns[1].DataPropertyName = "Division";
+            TeamsGridView.Columns[2].DataPropertyName = "Wins";
+            TeamsGridView.Columns[3].DataPropertyName = "Losses";
+            TeamsGridView.Columns[4].DataPropertyName = "RPIRank";
+            TeamsGridView.Columns[5].DataPropertyName = "StrengthOfScheduleRank";
+            TeamsGridView.Columns[6].DataPropertyName = "RPI";
+            TeamsGridView.Columns[7].DataPropertyName = "PreviousRPI";
+            TeamsGridView.Columns[8].DataPropertyName = "StrengthOfSchedule";
+            TeamsGridView.Columns[9].DataPropertyName = "WinningPercentage";
+            TeamsGridView.Columns[10].DataPropertyName = "OpponentsWinPercentage";
+            TeamsGridView.Columns[11].DataPropertyName = "OpponentsOpponentWinPercentage";
 
 
             TeamsGridView.DataSource = Teams;
@@ -133,7 +183,7 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns[2].DataPropertyName = "RPI";
             TeamsGridView.Columns[3].DataPropertyName = "PreviousRPI";
             TeamsGridView.Columns[4].DataPropertyName = "RPIDiff";
-            
+
 
             TeamsGridView.Sort(TeamsGridView.Columns["RPI"], ListSortDirection.Descending);
         }

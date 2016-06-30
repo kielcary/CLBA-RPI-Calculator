@@ -277,7 +277,11 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		private System.DateTime _GameDate;
 		
+		private int _SeasonID;
+		
 		private EntitySet<TeamCalculation> _TeamCalculations;
+		
+		private EntityRef<Season> _Season;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -289,11 +293,14 @@ namespace WindowsFormsApplication1.DataBaseContext
     partial void OnUploadDateChanged();
     partial void OnGameDateChanging(System.DateTime value);
     partial void OnGameDateChanged();
+    partial void OnSeasonIDChanging(int value);
+    partial void OnSeasonIDChanged();
     #endregion
 		
 		public Upload()
 		{
 			this._TeamCalculations = new EntitySet<TeamCalculation>(new Action<TeamCalculation>(this.attach_TeamCalculations), new Action<TeamCalculation>(this.detach_TeamCalculations));
+			this._Season = default(EntityRef<Season>);
 			OnCreated();
 		}
 		
@@ -357,6 +364,30 @@ namespace WindowsFormsApplication1.DataBaseContext
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SeasonID", DbType="Int NOT NULL")]
+		public int SeasonID
+		{
+			get
+			{
+				return this._SeasonID;
+			}
+			set
+			{
+				if ((this._SeasonID != value))
+				{
+					if (this._Season.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnSeasonIDChanging(value);
+					this.SendPropertyChanging();
+					this._SeasonID = value;
+					this.SendPropertyChanged("SeasonID");
+					this.OnSeasonIDChanged();
+				}
+			}
+		}
+		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Upload_TeamCalculation", Storage="_TeamCalculations", ThisKey="UploadID", OtherKey="UploadID")]
 		public EntitySet<TeamCalculation> TeamCalculations
 		{
@@ -367,6 +398,40 @@ namespace WindowsFormsApplication1.DataBaseContext
 			set
 			{
 				this._TeamCalculations.Assign(value);
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Season_Upload", Storage="_Season", ThisKey="SeasonID", OtherKey="SeasonID", IsForeignKey=true)]
+		public Season Season
+		{
+			get
+			{
+				return this._Season.Entity;
+			}
+			set
+			{
+				Season previousValue = this._Season.Entity;
+				if (((previousValue != value) 
+							|| (this._Season.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Season.Entity = null;
+						previousValue.Uploads.Remove(this);
+					}
+					this._Season.Entity = value;
+					if ((value != null))
+					{
+						value.Uploads.Add(this);
+						this._SeasonID = value.SeasonID;
+					}
+					else
+					{
+						this._SeasonID = default(int);
+					}
+					this.SendPropertyChanged("Season");
+				}
 			}
 		}
 		
@@ -535,6 +600,8 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		private int _LossesAgainst;
 		
+		private System.DateTime _DateModified;
+		
 		private EntityRef<Season> _Season;
 		
 		private EntityRef<Team> _Team;
@@ -557,6 +624,8 @@ namespace WindowsFormsApplication1.DataBaseContext
     partial void OnWinsAgainstChanged();
     partial void OnLossesAgainstChanging(int value);
     partial void OnLossesAgainstChanged();
+    partial void OnDateModifiedChanging(System.DateTime value);
+    partial void OnDateModifiedChanged();
     #endregion
 		
 		public OpponentsRecord()
@@ -695,6 +764,26 @@ namespace WindowsFormsApplication1.DataBaseContext
 					this._LossesAgainst = value;
 					this.SendPropertyChanged("LossesAgainst");
 					this.OnLossesAgainstChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_DateModified", DbType="DateTime NOT NULL")]
+		public System.DateTime DateModified
+		{
+			get
+			{
+				return this._DateModified;
+			}
+			set
+			{
+				if ((this._DateModified != value))
+				{
+					this.OnDateModifiedChanging(value);
+					this.SendPropertyChanging();
+					this._DateModified = value;
+					this.SendPropertyChanged("DateModified");
+					this.OnDateModifiedChanged();
 				}
 			}
 		}
@@ -1096,6 +1185,8 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		private int _Year;
 		
+		private EntitySet<Upload> _Uploads;
+		
 		private EntitySet<OpponentsRecord> _OpponentsRecords;
 		
 		private EntitySet<Record> _Records;
@@ -1114,6 +1205,7 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		public Season()
 		{
+			this._Uploads = new EntitySet<Upload>(new Action<Upload>(this.attach_Uploads), new Action<Upload>(this.detach_Uploads));
 			this._OpponentsRecords = new EntitySet<OpponentsRecord>(new Action<OpponentsRecord>(this.attach_OpponentsRecords), new Action<OpponentsRecord>(this.detach_OpponentsRecords));
 			this._Records = new EntitySet<Record>(new Action<Record>(this.attach_Records), new Action<Record>(this.detach_Records));
 			this._TeamCalculations = new EntitySet<TeamCalculation>(new Action<TeamCalculation>(this.attach_TeamCalculations), new Action<TeamCalculation>(this.detach_TeamCalculations));
@@ -1157,6 +1249,19 @@ namespace WindowsFormsApplication1.DataBaseContext
 					this.SendPropertyChanged("Year");
 					this.OnYearChanged();
 				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Season_Upload", Storage="_Uploads", ThisKey="SeasonID", OtherKey="SeasonID")]
+		public EntitySet<Upload> Uploads
+		{
+			get
+			{
+				return this._Uploads;
+			}
+			set
+			{
+				this._Uploads.Assign(value);
 			}
 		}
 		
@@ -1217,6 +1322,18 @@ namespace WindowsFormsApplication1.DataBaseContext
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
+		}
+		
+		private void attach_Uploads(Upload entity)
+		{
+			this.SendPropertyChanging();
+			entity.Season = this;
+		}
+		
+		private void detach_Uploads(Upload entity)
+		{
+			this.SendPropertyChanging();
+			entity.Season = null;
 		}
 		
 		private void attach_OpponentsRecords(OpponentsRecord entity)

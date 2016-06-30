@@ -17,14 +17,16 @@ namespace WindowsFormsApplication1
     public partial class CheckAndCommitForm : Form
     {
         private static readonly SortableBindingList<TeamModel> Teams = new SortableBindingList<TeamModel>();
+        private int _SeasonID;
 
-        public CheckAndCommitForm()
+        public CheckAndCommitForm(int seasonID)
         {
             InitializeComponent();
 
             TeamsGridView.AutoGenerateColumns = true;
             TeamsGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
 
+            _SeasonID = seasonID;
 
             GetTeams();
             GetStandings();
@@ -32,6 +34,17 @@ namespace WindowsFormsApplication1
             RunCalculations();
             ShowImportData();
 
+            
+
+            dtpGameDate.Value = GetLastUploadGameDate();
+
+            this.Shown += OnShown;
+
+        }
+
+        private void OnShown(object sender, EventArgs eventArgs)
+        {
+            CheckIfDuplicateData();
         }
 
 
@@ -58,35 +71,25 @@ namespace WindowsFormsApplication1
                 }
             }
         }
-
-
-
-        /// <summary>
-        /// Handles database save.
-        /// </summary>
-        private void CommitNewDataToDataBase()
-        {
-            using (var Content = new DataClassesDataContext())
-            {
-                
-            }
-        }
-
+        
         /// <summary>
         ///     Runs all calculations for all teams
         /// </summary>
         public void RunCalculations()
         {
+            //1.  Calc opponent win percentage
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcOppWinPercentage(Teams);
             }
 
+            //2.  Using calculated opponent win percentages, calculate opponent's opponent win percentage
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcOppOppWinPercentage(Teams);
             }
 
+            //3.  Using calculated data, generate metrics and round them for viewing pleasure
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcRPI();
@@ -94,6 +97,7 @@ namespace WindowsFormsApplication1
                 teamModel.RoundData();
             }
 
+            //4.  Calculate Ranks
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcRanks(Teams);
@@ -229,6 +233,38 @@ namespace WindowsFormsApplication1
             }
         }
 
+        private void CheckIfDuplicateData()
+        {
+            using (var Content = new DataClassesDataContext())
+            {
+                int DatabaseSeasonWins = 0;
+                int DatabaseSeasonLosses = 0;
+
+                int ImportWins = 0;
+                int ImportLosses = 0;
+                var seasonRecords = Content.Records.ToList().Where(x => x.SeasonID == _SeasonID);
+                foreach (var seasonRecord in seasonRecords)
+                {
+                    DatabaseSeasonWins += seasonRecord.Wins;
+                    DatabaseSeasonLosses += seasonRecord.Losses;
+                }
+                foreach (var teamModel in Teams)
+                {
+                    ImportWins += teamModel.Wins;
+                    ImportLosses += teamModel.Losses;
+                }
+
+                if (ImportWins == DatabaseSeasonWins && ImportLosses == DatabaseSeasonLosses)
+                {
+                    MessageBox.Show("It appears this data already exists in the database.  No import needed.",
+                        "Exiting Import", MessageBoxButtons.OK);
+
+                    this.Close();
+                }
+
+            }
+        }
+
         private void ShowImportData()
         {
             TeamsGridView.DataSource = null;
@@ -264,6 +300,132 @@ namespace WindowsFormsApplication1
 
             TeamsGridView.DataSource = Teams;
             TeamsGridView.Sort(TeamsGridView.Columns["Name"], ListSortDirection.Ascending);
+        }
+
+        private DateTime GetLastUploadGameDate()
+        {
+            using (var Content = new DataClassesDataContext())
+            {
+                var LastUpdate = Content.Uploads.OrderByDescending(
+                    d => d.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID);
+
+                if (LastUpdate != null)
+                {
+                    var date = LastUpdate.GameDate.Date;
+                    return date;
+                }
+                else
+                {
+                    string seasonYear = Content.Seasons.FirstOrDefault(x => x.SeasonID == _SeasonID).Year.ToString();
+                    return DateTime.Parse("01/01/" + seasonYear);
+                }
+                
+                
+            }
+        }
+
+        private void btnCommit_Click(object sender, EventArgs e)
+        {
+            using (var Content = new DataClassesDataContext())
+            {
+                if (dtpGameDate.Value == GetLastUploadGameDate())
+                {
+                    MessageBox.Show("An upload for this game date has already occured", "Cannot Proceed",
+                        MessageBoxButtons.OK);
+
+                    return;
+                }
+                //create a new upload
+                var newUpload = new Upload();
+                newUpload.GameDate = dtpGameDate.Value;
+                newUpload.UploadDate = DateTime.Now.Date;
+                newUpload.SeasonID = _SeasonID;
+                Content.Uploads.InsertOnSubmit(newUpload);
+                Content.SubmitChanges();
+
+                foreach (var teamModel in Teams)
+                {
+                    
+                    //Update or create record
+                    var record =
+                        Content.Records.FirstOrDefault(x => x.TeamID == teamModel.TeamID && x.SeasonID == _SeasonID);
+                    if (record == null)
+                    {
+                        record = new Record();
+                        record.TeamID = teamModel.TeamID;
+                        record.SeasonID = _SeasonID;
+                        record.Wins = teamModel.Wins;
+                        record.Losses = teamModel.Losses;
+                        record.DateModified = DateTime.Now.Date;
+                        Content.Records.InsertOnSubmit(record);
+                        Content.SubmitChanges();
+                    }
+                    else
+                    {
+                        record.Wins = teamModel.Wins;
+                        record.Losses = teamModel.Losses;
+                        record.DateModified = DateTime.Now.Date;
+                        Content.SubmitChanges();
+                    }
+
+                    //Update or create opponentrecords
+                    foreach (var opponentModel in teamModel.OpponentsList)
+                    {
+                        if (opponentModel.WinsVersus != 0 || opponentModel.LossesVersus != 0)
+                        {
+                            var opponentRecord = Content.OpponentsRecords.FirstOrDefault(
+                           x => x.TeamID == teamModel.TeamID && x.OpponentTeamID == opponentModel.OpponentTeamID &&
+                                x.SeasonID == _SeasonID);
+
+                            if (opponentRecord == null)
+                            {
+                                opponentRecord = new OpponentsRecord();
+                                opponentRecord.SeasonID = _SeasonID;
+                                opponentRecord.TeamID = teamModel.TeamID;
+                                opponentRecord.OpponentTeamID = opponentModel.OpponentTeamID;
+                                opponentRecord.WinsAgainst = opponentModel.WinsVersus;
+                                opponentRecord.LossesAgainst = opponentModel.LossesVersus;
+                                opponentRecord.DateModified = DateTime.Now.Date;
+                                Content.OpponentsRecords.InsertOnSubmit(opponentRecord);
+                                Content.SubmitChanges();
+                            }
+                            else
+                            {
+                                opponentRecord.WinsAgainst = opponentModel.WinsVersus;
+                                opponentRecord.LossesAgainst = opponentModel.LossesVersus;
+                                opponentRecord.DateModified = DateTime.Now.Date;
+                                Content.SubmitChanges();
+                            }
+                        }  
+                    }
+
+                    //Insert team calculations - new for each upload
+                    var calculations = new TeamCalculation();
+                    calculations.UploadID = newUpload.UploadID;
+                    calculations.SeasonID = _SeasonID;
+                    calculations.TeamID = teamModel.TeamID;
+                    calculations.WP = teamModel.WinningPercentage;
+                    calculations.OWP = teamModel.OpponentsWinPercentage;
+                    calculations.OOWP = teamModel.OpponentsOpponentWinPercentage;
+                    calculations.SoS = teamModel.StrengthOfSchedule;
+                    calculations.RPI = teamModel.RPI;
+                    calculations.DateCreated = DateTime.Now.Date;
+                    Content.TeamCalculations.InsertOnSubmit(calculations);
+                    Content.SubmitChanges();
+
+                }
+            }
+            this.Close();
+        }
+        
+        private void dtpGameDate_MouseDown(object sender, MouseEventArgs e)
+        {
+            btnCommit.Enabled = true;
+        }
+
+        private void bntClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
