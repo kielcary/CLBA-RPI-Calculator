@@ -78,11 +78,11 @@ namespace WindowsFormsApplication1
                                          }).ToList(),
                         Wins = team.Records.FirstOrDefault(x => x.SeasonID == _SeasonID).Wins,
                         Losses = team.Records.FirstOrDefault(x => x.SeasonID == _SeasonID).Losses,
-                        RPI = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).RPI,
-                        StrengthOfSchedule = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).SoS,
-                        OpponentsWinPercentage = (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).OWP,
+                        RPI = (float)team.TeamCalculations.OrderByDescending(x => x.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID).RPI,
+                        StrengthOfSchedule = (float)team.TeamCalculations.OrderByDescending(x => x.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID).SoS,
+                        OpponentsWinPercentage = (float)team.TeamCalculations.OrderByDescending(x => x.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID).OWP,
                         OpponentsOpponentWinPercentage =
-                            (float)team.TeamCalculations.FirstOrDefault(x => x.SeasonID == _SeasonID).OOWP,
+                            (float)team.TeamCalculations.OrderByDescending(x => x.UploadID).FirstOrDefault(x => x.SeasonID == _SeasonID).OOWP,
 
 
                     });
@@ -101,9 +101,9 @@ namespace WindowsFormsApplication1
                         if (previousUpload != null)
                         {
                             teamModel.PreviousRPI = (float)Content.TeamCalculations.FirstOrDefault(
-                                x => x.UploadID == previousUpload.UploadID).RPI;
+                                x => x.UploadID == previousUpload.UploadID && x.TeamID == teamModel.TeamID).RPI;
 
-                            teamModel.RPIDiff = teamModel.RPI = teamModel.PreviousRPI;
+                            teamModel.RPIDiff = teamModel.RPI - teamModel.PreviousRPI;
                         }   
                     }
                 }

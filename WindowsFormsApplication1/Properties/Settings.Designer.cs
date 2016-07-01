@@ -32,5 +32,16 @@ namespace WindowsFormsApplication1.Properties {
                 return ((string)(this["CLBCalcsConnectionString"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=DESKTOP-IHUDJFR\\SEAMLESSEHR;Initial Catalog=CLBCalcs;Integrated Secur" +
+            "ity=True")]
+        public string CLBCalcsConnectionString1 {
+            get {
+                return ((string)(this["CLBCalcsConnectionString1"]));
+            }
+        }
     }
 }

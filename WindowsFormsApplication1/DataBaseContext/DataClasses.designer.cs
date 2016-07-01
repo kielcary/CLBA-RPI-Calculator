@@ -57,7 +57,7 @@ namespace WindowsFormsApplication1.DataBaseContext
     #endregion
 		
 		public DataClassesDataContext() : 
-				base(global::WindowsFormsApplication1.Properties.Settings.Default.CLBCalcsConnectionString, mappingSource)
+				base(global::WindowsFormsApplication1.Properties.Settings.Default.CLBCalcsConnectionString1, mappingSource)
 		{
 			OnCreated();
 		}
