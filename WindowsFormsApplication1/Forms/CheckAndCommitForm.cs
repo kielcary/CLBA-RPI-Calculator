@@ -44,7 +44,7 @@ namespace WindowsFormsApplication1
 
         private void OnShown(object sender, EventArgs eventArgs)
         {
-            //CheckIfDuplicateData();
+            CheckIfDuplicateData();
         }
 
 
