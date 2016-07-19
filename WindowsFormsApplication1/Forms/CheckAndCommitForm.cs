@@ -44,7 +44,7 @@ namespace WindowsFormsApplication1
 
         private void OnShown(object sender, EventArgs eventArgs)
         {
-            CheckIfDuplicateData();
+            //CheckIfDuplicateData();
         }
 
 
@@ -81,18 +81,21 @@ namespace WindowsFormsApplication1
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcOppWinPercentage(Teams);
+                teamModel.CalcPythOppWinPercentage(Teams);
             }
 
             //2.  Using calculated opponent win percentages, calculate opponent's opponent win percentage
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcOppOppWinPercentage(Teams);
+                teamModel.CalcPythOppOppWinPercentage(Teams);
             }
 
             //3.  Using calculated data, generate metrics and round them for viewing pleasure
             foreach (var teamModel in Teams)
             {
                 teamModel.CalcRPI();
+                teamModel.CalcPythRPI();
                 teamModel.CalcStrengthOfSchedule();
                 teamModel.RoundData();
             }
@@ -163,6 +166,7 @@ namespace WindowsFormsApplication1
             var Team = "";
             var Wins = "";
             var Losses = "";
+            
 
             foreach (var htmlNode in standingsHtmlNodes)
             {
@@ -175,11 +179,15 @@ namespace WindowsFormsApplication1
                             Team = childNode.ChildNodes[1].InnerText;
                             Wins = childNode.ChildNodes[3].InnerText;
                             Losses = childNode.ChildNodes[5].InnerText;
+                            var PythRecord = childNode.ChildNodes[11].InnerText.Split('-');
 
                             if (Teams.Any(x => x.Name == Team) && Wins != "W")
                             {
                                 Teams.FirstOrDefault(x => x.Name == Team).Wins = Convert.ToInt32(Wins);
                                 Teams.FirstOrDefault(x => x.Name == Team).Losses = Convert.ToInt32(Losses);
+
+                                Teams.FirstOrDefault(x => x.Name == Team).PythWins = Convert.ToInt32(PythRecord[0]);
+                                Teams.FirstOrDefault(x => x.Name == Team).PythLosses = Convert.ToInt32(PythRecord[1]);
                             }
                         }
                     }
@@ -284,6 +292,8 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns.Add("WP", "WP");
             TeamsGridView.Columns.Add("OWP", "OWP");
             TeamsGridView.Columns.Add("OOWP", "OOWP");
+            TeamsGridView.Columns.Add("PythRPI", "PythRPI");
+            TeamsGridView.Columns.Add("PythRPIRank", "PythRPIRank");
 
 
             TeamsGridView.Columns[0].DataPropertyName = "Name";
@@ -296,6 +306,8 @@ namespace WindowsFormsApplication1
             TeamsGridView.Columns[7].DataPropertyName = "WinningPercentage";
             TeamsGridView.Columns[8].DataPropertyName = "OpponentsWinPercentage";
             TeamsGridView.Columns[9].DataPropertyName = "OpponentsOpponentWinPercentage";
+            TeamsGridView.Columns[10].DataPropertyName = "PythRPI";
+            TeamsGridView.Columns[11].DataPropertyName = "PythRPIRanking";
 
 
             TeamsGridView.DataSource = Teams;
@@ -356,6 +368,8 @@ namespace WindowsFormsApplication1
                         record.SeasonID = _SeasonID;
                         record.Wins = teamModel.Wins;
                         record.Losses = teamModel.Losses;
+                        record.PythWins = teamModel.PythWins;
+                        record.PythLosses = teamModel.PythLosses;
                         record.DateModified = DateTime.Now.Date;
                         Content.Records.InsertOnSubmit(record);
                         Content.SubmitChanges();
@@ -364,6 +378,8 @@ namespace WindowsFormsApplication1
                     {
                         record.Wins = teamModel.Wins;
                         record.Losses = teamModel.Losses;
+                        record.PythWins = teamModel.PythWins;
+                        record.PythLosses = teamModel.PythLosses;
                         record.DateModified = DateTime.Now.Date;
                         Content.SubmitChanges();
                     }
@@ -409,6 +425,10 @@ namespace WindowsFormsApplication1
                     calculations.OOWP = teamModel.OpponentsOpponentWinPercentage;
                     calculations.SoS = teamModel.StrengthOfSchedule;
                     calculations.RPI = teamModel.RPI;
+                    calculations.PythOOWP = teamModel.PythOpponentsOpponentWinPercentage;
+                    calculations.PythOWP = teamModel.PythOpponentsWinPercentage;
+                    calculations.PythRPI = teamModel.PythRPI;
+                    calculations.PythWP = teamModel.PythWinPercentage;
                     calculations.DateCreated = DateTime.Now.Date;
                     Content.TeamCalculations.InsertOnSubmit(calculations);
                     Content.SubmitChanges();

@@ -89,6 +89,7 @@
             this.btnPyth.TabIndex = 4;
             this.btnPyth.Text = "Pyth";
             this.btnPyth.UseVisualStyleBackColor = true;
+            this.btnPyth.Click += new System.EventHandler(this.btnPyth_Click);
             // 
             // groupBox1
             // 

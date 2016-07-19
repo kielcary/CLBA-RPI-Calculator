@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="CLBCalcs" Class="DataClassesDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=DESKTOP-IHUDJFR\SEAMLESSEHR;Initial Catalog=CLBCalcs;Integrated Security=True" SettingsObjectName="WindowsFormsApplication1.Properties.Settings" SettingsPropertyName="CLBCalcsConnectionString1" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=KIEL-HP\KIELLOCAL;Initial Catalog=CLBCalcs;Integrated Security=True" SettingsObjectName="WindowsFormsApplication1.Properties.Settings" SettingsPropertyName="CLBCalcsConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.Division" Member="Divisions">
     <Type Name="Division">
       <Column Name="DivisionID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -46,6 +46,8 @@
       <Column Name="Wins" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Losses" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="DateModified" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="PythWins" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="PythLosses" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="Season_Record" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
       <Association Name="Team_Record" Member="Team" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
     </Type>
@@ -86,6 +88,10 @@
       <Column Name="SoS" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="RPI" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="DateCreated" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="PythWP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="PythOWP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="PythOOWP" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="PythRPI" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Association Name="Season_TeamCalculation" Member="Season" ThisKey="SeasonID" OtherKey="SeasonID" Type="Season" IsForeignKey="true" />
       <Association Name="Team_TeamCalculation" Member="Team" ThisKey="TeamID" OtherKey="TeamID" Type="Team" IsForeignKey="true" />
       <Association Name="Upload_TeamCalculation" Member="Upload" ThisKey="UploadID" OtherKey="UploadID" Type="Upload" IsForeignKey="true" />

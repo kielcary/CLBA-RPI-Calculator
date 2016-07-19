@@ -20,5 +20,11 @@ namespace WindowsFormsApplication1
 
         public int AdjustedWins { get; set; }
         public int AdjustedLosses { get; set; }
+
+        public int PythWins { get; set; }
+        public int PythLosses { get; set; }
+
+        public int AdjustedPythWins { get; set; }
+        public int AdjustedPythLosses { get; set; }
     }
 }

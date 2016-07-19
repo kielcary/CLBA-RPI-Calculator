@@ -36,8 +36,7 @@ namespace WindowsFormsApplication1.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=DESKTOP-IHUDJFR\\SEAMLESSEHR;Initial Catalog=CLBCalcs;Integrated Secur" +
-            "ity=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=KIEL-HP\\KIELLOCAL;Initial Catalog=CLBCalcs;Integrated Security=True")]
         public string CLBCalcsConnectionString1 {
             get {
                 return ((string)(this["CLBCalcsConnectionString1"]));

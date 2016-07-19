@@ -57,7 +57,7 @@ namespace WindowsFormsApplication1.DataBaseContext
     #endregion
 		
 		public DataClassesDataContext() : 
-				base(global::WindowsFormsApplication1.Properties.Settings.Default.CLBCalcsConnectionString1, mappingSource)
+				base(global::WindowsFormsApplication1.Properties.Settings.Default.CLBCalcsConnectionString, mappingSource)
 		{
 			OnCreated();
 		}
@@ -929,6 +929,10 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		private System.DateTime _DateModified;
 		
+		private int _PythWins;
+		
+		private int _PythLosses;
+		
 		private EntityRef<Season> _Season;
 		
 		private EntityRef<Team> _Team;
@@ -949,6 +953,10 @@ namespace WindowsFormsApplication1.DataBaseContext
     partial void OnLossesChanged();
     partial void OnDateModifiedChanging(System.DateTime value);
     partial void OnDateModifiedChanged();
+    partial void OnPythWinsChanging(int value);
+    partial void OnPythWinsChanged();
+    partial void OnPythLossesChanging(int value);
+    partial void OnPythLossesChanged();
     #endregion
 		
 		public Record()
@@ -1082,6 +1090,46 @@ namespace WindowsFormsApplication1.DataBaseContext
 					this._DateModified = value;
 					this.SendPropertyChanged("DateModified");
 					this.OnDateModifiedChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythWins", DbType="Int NOT NULL")]
+		public int PythWins
+		{
+			get
+			{
+				return this._PythWins;
+			}
+			set
+			{
+				if ((this._PythWins != value))
+				{
+					this.OnPythWinsChanging(value);
+					this.SendPropertyChanging();
+					this._PythWins = value;
+					this.SendPropertyChanged("PythWins");
+					this.OnPythWinsChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythLosses", DbType="Int NOT NULL")]
+		public int PythLosses
+		{
+			get
+			{
+				return this._PythLosses;
+			}
+			set
+			{
+				if ((this._PythLosses != value))
+				{
+					this.OnPythLossesChanging(value);
+					this.SendPropertyChanging();
+					this._PythLosses = value;
+					this.SendPropertyChanged("PythLosses");
+					this.OnPythLossesChanged();
 				}
 			}
 		}
@@ -1727,6 +1775,14 @@ namespace WindowsFormsApplication1.DataBaseContext
 		
 		private System.DateTime _DateCreated;
 		
+		private double _PythWP;
+		
+		private double _PythOWP;
+		
+		private double _PythOOWP;
+		
+		private double _PythRPI;
+		
 		private EntityRef<Season> _Season;
 		
 		private EntityRef<Team> _Team;
@@ -1757,6 +1813,14 @@ namespace WindowsFormsApplication1.DataBaseContext
     partial void OnRPIChanged();
     partial void OnDateCreatedChanging(System.DateTime value);
     partial void OnDateCreatedChanged();
+    partial void OnPythWPChanging(double value);
+    partial void OnPythWPChanged();
+    partial void OnPythOWPChanging(double value);
+    partial void OnPythOWPChanged();
+    partial void OnPythOOWPChanging(double value);
+    partial void OnPythOOWPChanged();
+    partial void OnPythRPIChanging(double value);
+    partial void OnPythRPIChanged();
     #endregion
 		
 		public TeamCalculation()
@@ -1975,6 +2039,86 @@ namespace WindowsFormsApplication1.DataBaseContext
 					this._DateCreated = value;
 					this.SendPropertyChanged("DateCreated");
 					this.OnDateCreatedChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythWP", DbType="Float NOT NULL")]
+		public double PythWP
+		{
+			get
+			{
+				return this._PythWP;
+			}
+			set
+			{
+				if ((this._PythWP != value))
+				{
+					this.OnPythWPChanging(value);
+					this.SendPropertyChanging();
+					this._PythWP = value;
+					this.SendPropertyChanged("PythWP");
+					this.OnPythWPChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythOWP", DbType="Float NOT NULL")]
+		public double PythOWP
+		{
+			get
+			{
+				return this._PythOWP;
+			}
+			set
+			{
+				if ((this._PythOWP != value))
+				{
+					this.OnPythOWPChanging(value);
+					this.SendPropertyChanging();
+					this._PythOWP = value;
+					this.SendPropertyChanged("PythOWP");
+					this.OnPythOWPChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythOOWP", DbType="Float NOT NULL")]
+		public double PythOOWP
+		{
+			get
+			{
+				return this._PythOOWP;
+			}
+			set
+			{
+				if ((this._PythOOWP != value))
+				{
+					this.OnPythOOWPChanging(value);
+					this.SendPropertyChanging();
+					this._PythOOWP = value;
+					this.SendPropertyChanged("PythOOWP");
+					this.OnPythOOWPChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PythRPI", DbType="Float NOT NULL")]
+		public double PythRPI
+		{
+			get
+			{
+				return this._PythRPI;
+			}
+			set
+			{
+				if ((this._PythRPI != value))
+				{
+					this.OnPythRPIChanging(value);
+					this.SendPropertyChanging();
+					this._PythRPI = value;
+					this.SendPropertyChanged("PythRPI");
+					this.OnPythRPIChanged();
 				}
 			}
 		}

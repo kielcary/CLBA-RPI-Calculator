@@ -28,6 +28,14 @@ namespace WindowsFormsApplication1
 
         private float _OpponentsWinPercentage;
         private float _OpponentsOpponentWinPercentage;
+
+        private int _PythWins;
+        private int _PythLosses;
+        private float _PythWinPercentage;
+        private float _PythRPI;
+        private int _PythRPIRanking;
+        public float _PythOpponentsWinPercentage;
+        public float _PythOpponentsOpponentWinPercentage;
         #endregion private
 
 
@@ -123,7 +131,61 @@ namespace WindowsFormsApplication1
             get { return _OpponentsOpponentWinPercentage; }
             set { _OpponentsOpponentWinPercentage = value; }
         }
+
+        public int PythWins
+        {
+            get { return _PythWins; }
+            set
+            {
+                _PythWins = value;
+                if (_PythWins != 0 || _PythLosses != 0)
+                {
+                    CalcPythWinPercentage();
+                }
+            }
+        }
+        public int PythLosses
+        {
+            get { return _PythLosses; }
+            set
+            {
+                _PythLosses = value;
+                if (_PythWins != 0 || _PythLosses != 0)
+                {
+                    CalcPythWinPercentage();
+                }
+            }
+        }
+
+        public float PythWinPercentage
+        {
+            get { return _PythWinPercentage; }
+            set { _PythWinPercentage = value; }
+        }
+
+        public float PythOpponentsWinPercentage
+        {
+            get { return _PythOpponentsWinPercentage; }
+            set { _PythOpponentsWinPercentage = value; }
+        }
+        public float PythOpponentsOpponentWinPercentage
+        {
+            get { return _PythOpponentsOpponentWinPercentage; }
+            set { _PythOpponentsOpponentWinPercentage = value; }
+        }
+        public float PythRPI
+        {
+            get { return _PythRPI; }
+            set { _PythRPI = value; }
+        }
+        public int PythRPIRanking
+        {
+            get { return _PythRPIRanking; }
+            set { _PythRPIRanking = value; }
+        }
         #endregion
+
+
 
 
         /// <summary>
@@ -140,6 +202,24 @@ namespace WindowsFormsApplication1
             else
             {
                 WinningPercentage = (float)Wins / (Wins + Losses);
+            }
+
+        }
+
+        /// <summary>
+        /// Calculate's team's Win Percentage based on Pythagorian W/L
+        /// </summary>
+        private void CalcPythWinPercentage()
+        {
+
+            //Win percentage is simply wins/totalGamesPlayed
+            if (_PythWins == 0)
+            {
+                PythWinPercentage = 0;
+            }
+            else
+            {
+                PythWinPercentage = (float)PythWins / (PythWins + PythLosses);
             }
 
         }
@@ -195,6 +275,56 @@ namespace WindowsFormsApplication1
         }
 
         /// <summary>
+        /// Calculates Opponent's Win Percentage, weighted by number of times played, based on Pythagorean W/L
+        /// </summary>
+        /// <param name="teams"></param>
+        public void CalcPythOppWinPercentage(SortableBindingList<TeamModel> teams)
+        {
+            //Opponents win percentage is calculated by:
+            //1.  Getting wins and losses for each team
+            //2.  For the team which you are caculating opponents win percentage, you remove the wins and losses 
+            //    for games played against said opponent
+            //3.  Each opponent's Wins and Losses must be multiplied by the number of times the team was played.
+            //4.  Tally all of these adjusted wins and losses together
+            //5.  OpponentsWinPercentage = AdjustedOpponentWins/totalAdjustedOpponentGamesPlayed
+
+            float totalAdjustedOppWins = 0;
+            float totalAdjustedOppLosses = 0;
+            //1.  Adjust records of opponents by subtracting wins and losses vs the current team from opposing records
+            foreach (var opponentModel in OpponentsList)
+            {
+                //Make sure they've actually played the opponent...
+                if (opponentModel.WinsVersus != 0 || opponentModel.LossesVersus != 0)
+                {
+                    //Get current wins and losses from the team standings list
+                    opponentModel.PythWins = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().PythWins);
+                    opponentModel.PythLosses = (teams.Where(x => x.Name.Equals(opponentModel.OpponentTeamName)).FirstOrDefault().PythLosses);
+
+                    //Subtract current team's losses versus opponent from that opponent's wins
+                    opponentModel.AdjustedPythWins = opponentModel.PythWins - opponentModel.LossesVersus;
+
+                    //Subtract current team's wins versus opponent from that opponent's losses
+                    opponentModel.AdjustedPythLosses = opponentModel.PythLosses - opponentModel.WinsVersus;
+
+                    //To further complicate things, we must now take into account the number of times a team was played, and 
+                    //multiply their win/loss record according the times they played them.
+                    int timesPlayed = opponentModel.LossesVersus + opponentModel.WinsVersus;
+
+                    opponentModel.AdjustedPythWins = opponentModel.AdjustedPythWins * timesPlayed;
+                    opponentModel.AdjustedPythLosses = opponentModel.AdjustedPythLosses * timesPlayed;
+
+                    //Add adjusted wins and losses together to get totals
+                    totalAdjustedOppWins += opponentModel.AdjustedPythWins;
+                    totalAdjustedOppLosses += opponentModel.AdjustedPythLosses;
+                }
+            }
+
+            PythOpponentsWinPercentage = totalAdjustedOppWins / (totalAdjustedOppWins + totalAdjustedOppLosses);
+
+
+        }
+
+        /// <summary>
         /// Calculates average of  Opponent's Opponent's Win Percentage 
         /// </summary>
         /// <param name="teams"></param>
@@ -225,11 +355,49 @@ namespace WindowsFormsApplication1
         }
 
         /// <summary>
+        /// Calculates average of  Opponent's Opponent's Win Percentage based on Pythagorean W/L
+        /// </summary>
+        /// <param name="teams"></param>
+        public void CalcPythOppOppWinPercentage(SortableBindingList<TeamModel> teams)
+        {
+            //Opponent's Opponent's Win percentage is calculated by summing all of the opponents win percentages together, and
+            //dividing by total number of opponents.
+
+            float totalOpponentWinPercentage = 0;
+
+            foreach (var opponentModel in OpponentsList)
+            {
+                if (opponentModel.OpponentTeamID != TeamID)
+                {
+                    if (opponentModel.WinsVersus != 0 || opponentModel.LossesVersus != 0)
+                    {
+                        //Get the opponent's OpponentsWinPercentage
+                        float currentOppWinPercentage =
+                            teams.FirstOrDefault(x => x.Name.Equals(opponentModel.OpponentTeamName)).PythOpponentsWinPercentage;
+
+                        //Add it to the total
+                        totalOpponentWinPercentage += currentOppWinPercentage;
+                    }
+                }
+            }
+            //Divide the total by the number of opponents against whom the team has wins or losses
+            PythOpponentsOpponentWinPercentage = totalOpponentWinPercentage / OpponentsList.Count(x => x.WinsVersus != 0 || x.LossesVersus != 0);
+        }
+
+        /// <summary>
         /// Calculates RPI based on WinPerc, OppWinPer, OppOppWinPer
         /// </summary>
         public void CalcRPI()
         {
             RPI = (float)((WinningPercentage * .25) + (OpponentsWinPercentage * .5) + (OpponentsOpponentWinPercentage * .25));
+        }
+
+        /// <summary>
+        /// Calculates RPI based on PythWinPerc, PythOppWinPer, PythOppOppWinPer 
+        /// </summary>
+        public void CalcPythRPI()
+        {
+            PythRPI = (float)((PythWinPercentage * .25) + (PythOpponentsWinPercentage * .5) + (PythOpponentsOpponentWinPercentage * .25));
         }
 
         //Calculates team's Strenght of Schedule
@@ -246,6 +414,7 @@ namespace WindowsFormsApplication1
         {
             int rpirank = 1;
             int sosrank = 1;
+            int pythrpirank = 1;
 
             foreach (var teamModel in teams)
             {
@@ -260,12 +429,18 @@ namespace WindowsFormsApplication1
                     {
                         sosrank++;
                     }
+
+                    if (PythRPI < teamModel.PythRPI)
+                    {
+                        pythrpirank++;
+                    }
                 }
 
             }
 
             RPIRank = rpirank;
             StrengthOfScheduleRank = sosrank;
+            PythRPIRanking = pythrpirank;
 
         }
 
@@ -275,10 +450,14 @@ namespace WindowsFormsApplication1
         public void RoundData()
         {
             RPI = (float)Math.Round((Decimal)RPI, 3, MidpointRounding.AwayFromZero);
+            PythRPI = (float)Math.Round((Decimal)PythRPI, 3, MidpointRounding.AwayFromZero);
             StrengthOfSchedule = (float)Math.Round((Decimal)StrengthOfSchedule, 3, MidpointRounding.AwayFromZero);
             WinningPercentage = (float)Math.Round((Decimal)WinningPercentage, 3, MidpointRounding.AwayFromZero);
+            PythWinPercentage = (float)Math.Round((Decimal)PythWinPercentage, 3, MidpointRounding.AwayFromZero);
             OpponentsWinPercentage = (float)Math.Round((Decimal)OpponentsWinPercentage, 3, MidpointRounding.AwayFromZero);
+            PythOpponentsWinPercentage = (float)Math.Round((Decimal)PythOpponentsWinPercentage, 3, MidpointRounding.AwayFromZero);
             OpponentsOpponentWinPercentage = (float)Math.Round((Decimal)OpponentsOpponentWinPercentage, 3, MidpointRounding.AwayFromZero);
+            PythOpponentsOpponentWinPercentage = (float)Math.Round((Decimal)PythOpponentsOpponentWinPercentage, 3, MidpointRounding.AwayFromZero);
         }
 
     }
